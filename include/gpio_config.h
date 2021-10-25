@@ -60,7 +60,6 @@
 #define CONFIGURE_DRIVER_PCI_GR_RASTA_IO
 #define CONFIGURE_DRIVER_AMBAPP_GAISLER_GRPCI2
 
-
 #include <drvmgr/drvmgr_confdefs.h>
 
 /*
@@ -69,7 +68,6 @@
 #include <drvmgr/drvmgr.h>
 #include <drvmgr/ambapp_bus_grlib.h>
 #include <drvmgr/ambapp_bus.h>
-
 
 #ifdef DEBUG
 #define DBG(x...) printf(x)
@@ -94,17 +92,5 @@
 static const int input_ports[] = {24, 25, 26, 27, 28, 29, 30, 31};
 
 static const int output_ports[] = {32, 33, 34, 35, 36, 37, 38, 39};
-
-static uint8_t RESULT_SUCCESS = true;
-
-static uint8_t RESULT_FAIL = false;
-
-static const char *UART_DEV = "/dev/rastaio0/apbuart0";
-
-	#define ISR_OK	1
-
-static const char * SYNC = "sync\n";
-
-#define BAUD 38400
 
 #endif /* GPIO_CONFIG_H_ */
