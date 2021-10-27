@@ -1,7 +1,86 @@
 #include "gpio_config.h"
 
-#define PORT1 0
-#define PORT2 1
+#define PORT1 8
+#define PORT2 9
+
+void *port1, *port2;
+
+void gpio_isr(int irq, void *arg)
+{
+  struct gpiolib_config cfg;
+
+  /* Mask away GPIO IRQ */
+  cfg.mask = 0;
+  cfg.irq_level = GPIOLIB_IRQ_LEVEL;
+  cfg.irq_polarity = GPIOLIB_IRQ_POL_HIGH;
+
+  if ( gpiolib_set_config(port2, &cfg) ){
+    printf("Failed to configure gpio port %d\n", PORT2);
+    exit(0);
+  }
+  
+  printf("GPIO_ISR: %d, GOT %d\n", irq, (int)arg);
+}
+
+void setup_interrupt(int portnr)
+{
+  void *port;
+  struct gpiolib_config cfg;
+  int val;
+
+  port = gpiolib_open(portnr);
+  
+  /* Mask away GPIO IRQ */
+  cfg.mask = 0;
+  cfg.irq_level = GPIOLIB_IRQ_LEVEL;
+  cfg.irq_polarity = GPIOLIB_IRQ_POL_HIGH;
+  
+  if (gpiolib_set_config(port, &cfg) ){
+    printf("Failed to configure gpio port %d\n", portnr);
+    exit(0);
+  }
+  
+  if ( gpiolib_irq_disable(port)){
+    printf("Failed to disable IRQ on gpio port %d, disabling port "
+           "while not enabled should fail. OK\n", portnr);
+  } else {
+      printf("Disable IRQ on port %d should fail\n", portnr);
+    exit(0);
+  }
+  
+  if ( gpiolib_irq_clear(port) ){
+    printf("Failed to clear IRQ on gpio port %d\n", portnr);
+    exit(0);
+  }
+  
+  if ( gpiolib_irq_register(port, &gpio_isr, (void *)portnr) ){
+    printf("Failed to register IRQ on gpio port %d\n", portnr);
+    exit(0);
+  }
+  
+  if ( gpiolib_irq_enable(port) ){
+    printf("Failed to enable IRQ on gpio port %d\n", portnr);
+    exit(0);
+  }
+  
+  if ( gpiolib_get(port, &val) ){
+    printf("Failed to get value of gpio port %d\n", portnr);
+    exit(0);
+  }
+  printf("Current Value on GPIO: %d\n", val);
+  
+  /* Enable IRQ by unmasking IRQ */
+  cfg.mask = 1;
+  if ( gpiolib_set_config(port, &cfg) ){
+    printf("Failed to configure gpio port %d\n", portnr);
+    exit(0);
+  }
+
+  gpiolib_show(0, port);
+  port2=port;
+
+  
+}
 
 void print_ports_values(void *port1, void *port2)
 {
@@ -9,31 +88,14 @@ void print_ports_values(void *port1, void *port2)
   int port2val = -1;
   
   printf("GPIO PORTS Configured:\n");
-  gpiolib_show(PORT1, NULL);
-  gpiolib_show(PORT2, NULL);
+  gpiolib_show(0, port1);
+  gpiolib_show(0, port2);
         
   gpiolib_get(port1, &port1val);
   gpiolib_get(port2, &port2val);
   
   printf("Port 1 val: 0x%02X\n", port1val);
   printf("Port 2 val: 0x%02X\n", port2val);
-}
-
-void test_one_port(void *port)
-{
-  int val = -1;
-  
-  gpiolib_show(PORT1, NULL);
-  gpiolib_set(port, OUTPUT_PORT, 0);
-  gpiolib_get(port, &val);
-  printf("Value: %d\n", val);
-
-  gpiolib_set(port, OUTPUT_PORT, 1);
-  gpiolib_get(port, &val);
-  printf("Value: %d\n", val);
-  gpiolib_get(port, &val);
-  printf("Value: %d\n", val);
-
 }
 
 void set_all_ports_zero()
@@ -44,14 +106,15 @@ void set_all_ports_zero()
   for (i = 0; i < 46; i++)
     {
       port = gpiolib_open(i);
+      rtems_task_wake_after(2);
       gpiolib_set(port, OUTPUT_PORT, 0);
+      rtems_task_wake_after(2);
       gpiolib_close(port);
     }
 }
 
 rtems_task Init(rtems_task_argument argument)
 {
-        void *port1, *port2;
         int portnr = 0;
         int retval = 0;
 
@@ -78,7 +141,7 @@ rtems_task Init(rtems_task_argument argument)
         printf("Nro GPIOs: %d\n", portnr);
 
         printf("Seteo todos los puertos OUTPUT y a 0...\n");
-        //set_all_ports_zero();
+        set_all_ports_zero();
         gpiolib_show(-1, NULL);
         printf("Done.");
 
@@ -100,10 +163,6 @@ rtems_task Init(rtems_task_argument argument)
           exit(EXIT_FAILURE);
         }
 
-        //test_one_port(port1);
-        //exit(EXIT_SUCCESS);
-
-        
         // Setear puertos
         // 1
         if (gpiolib_set(port1, OUTPUT_PORT, 0) != 0)
@@ -123,12 +182,30 @@ rtems_task Init(rtems_task_argument argument)
         printf("Antes:\n");
         print_ports_values(port1, port2);
         
-        gpiolib_set(port1, OUTPUT_PORT, 0x1);
+        gpiolib_set(port1, OUTPUT_PORT, 1);
 
         rtems_task_wake_after(2);
 
         printf("Despues:\n");
         print_ports_values(port1, port2);
+
+        // Testeo interrupciones
+        
+        printf("Test de interrupciones\n");
+
+        printf("Seteo PORT1 a 0\n");
+        gpiolib_set(port1, OUTPUT_PORT, 0);
+        gpiolib_show(0, port1);
+        printf("Cierro PORT2 para que se use en interrupciones\n");
+        gpiolib_close(port2);
+
+        printf("Configurando interrupción en PORT2\n");
+        setup_interrupt(PORT2);
+
+        printf("Interrupciones configuradas, se disparará en 1 seg...\n");
+        sleep(1);
+
+        gpiolib_set(port1, OUTPUT_PORT, 1);
 
 	exit(EXIT_SUCCESS);
 }
