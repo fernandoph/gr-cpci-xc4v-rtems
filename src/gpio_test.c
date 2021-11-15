@@ -179,33 +179,19 @@ rtems_task Init(rtems_task_argument argument)
             exit(EXIT_FAILURE);
           }
 
-        printf("Antes:\n");
+        printf("\n\nEstado antes de setear HIGH en PORT[0]:\n");
+        printf("=======================================\n");
         print_ports_values(port1, port2);
         
         gpiolib_set(port1, OUTPUT_PORT, 1);
 
         rtems_task_wake_after(2);
 
-        printf("Despues:\n");
+        printf("\n\nEstado despues de setear HIGH en PORT[0]:\n");
+        printf("=========================================\n");
         print_ports_values(port1, port2);
 
-        // Testeo interrupciones
-        
-        printf("Test de interrupciones\n");
-
-        printf("Seteo PORT1 a 0\n");
-        gpiolib_set(port1, OUTPUT_PORT, 0);
-        gpiolib_show(0, port1);
-        printf("Cierro PORT2 para que se use en interrupciones\n");
+        gpiolib_close(port1);
         gpiolib_close(port2);
-
-        printf("Configurando interrupción en PORT2\n");
-        setup_interrupt(PORT2);
-
-        printf("Interrupciones configuradas, se disparará en 1 seg...\n");
-        sleep(1);
-
-        gpiolib_set(port1, OUTPUT_PORT, 1);
-
 	exit(EXIT_SUCCESS);
 }

@@ -7,7 +7,7 @@ CC = sparc-rtems-gcc
 
 INCLUDES = ../include/
 
-CFLAGS = -O0 -g3 -Wall -msoft-float -c -fmessage-length=0 -B$(RTEMS_DIR) -DRASTA -I$(INCLUDES) #-DDEBUG
+CFLAGS = -O0 -g3 -Wall -msoft-float -c -fmessage-length=0 -B$(RTEMS_DIR) -DRASTA -I$(INCLUDES) -pg#-DDEBUG
 
 LDFLAGS = -msoft-float -B$(RTEMS_DIR) -I$(INCLUDES)
 

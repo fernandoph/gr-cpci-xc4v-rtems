@@ -7,40 +7,25 @@
 #include <bsp.h>
 
 #define CONFIGURE_INIT
-
 #define CONFIGURE_APPLICATION_NEEDS_CONSOLE_DRIVER
-
 #define CONFIGURE_APPLICATION_NEEDS_CLOCK_DRIVER
-
 #define CONFIGURE_RTEMS_INIT_TASKS_TABLE
-
 #define CONFIGURE_EXECUTIVE_RAM_SIZE				(100*1024*1024)
-
-#define CONFIGURE_MAXIMUM_TASKS						4
-
-#define CONFIGURE_MAXIMUM_DRIVERS 					10
-
+#define CONFIGURE_MAXIMUM_TASKS					4
+#define CONFIGURE_MAXIMUM_DRIVERS 				10
 #define CONFIGURE_MICROSECONDS_PER_TICK				1000
-
 #define CONFIGURE_INIT_TASK_STACK_SIZE				(10*1024*1024)
-
 #define CONFIGURE_INIT_TASK_PRIORITY				12
-
 #define CONFIGURE_INIT_TASK_INITIAL_MODES 			(RTEMS_NO_PREEMPT | \
                                            	   	   	RTEMS_NO_TIMESLICE | \
                                            	   	   	RTEMS_NO_ASR | \
                                            	   	   	RTEMS_INTERRUPT_LEVEL(0))
 
-#define CONFIGURE_LIBIO_MAXIMUM_FILE_DESCRIPTORS	40
-
+#define CONFIGURE_LIBIO_MAXIMUM_FILE_DESCRIPTORS	        40
 #define CONFIGURE_USE_IMFS_AS_BASE_FILESYSTEM
-
 #define	CONFIGURE_STACK_CHECKER_ON
-
 #define RTEMS_PCI_CONFIG_LIB
-
-#define CONFIGURE_PCI_LIB 							1
-
+#define CONFIGURE_PCI_LIB 					1
 
 #include <rtems/confdefs.h>
 
@@ -68,6 +53,7 @@
 #include <drvmgr/drvmgr.h>
 #include <drvmgr/ambapp_bus_grlib.h>
 #include <drvmgr/ambapp_bus.h>
+#include <amba.h>
 
 #ifdef DEBUG
 #define DBG(x...) printf(x)
@@ -81,16 +67,5 @@
 #define GPIO_PORTS		8
 #define INPUT_PORT		0
 #define OUTPUT_PORT		1
-
-
-/* Cuidado en estos puertos, verificar
- *
- * Nota: Tener en cuenta que los GPIO de salida del EGSE son analogicos para
- * poder controlar la tension a 3,3V. Porque en la RASTA no se puede poner 5V.
- * La salida del EGSE es la entrada a la RASTA (input_ports) */
-
-static const int input_ports[] = {24, 25, 26, 27, 28, 29, 30, 31};
-
-static const int output_ports[] = {32, 33, 34, 35, 36, 37, 38, 39};
 
 #endif /* GPIO_CONFIG_H_ */
